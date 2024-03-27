@@ -171,17 +171,24 @@ public class BankApplication
         string filePath = $"C:\\Users\\jeffe\\Documents\\.Projetos_C#\\BankApplicationCA2\\ConsoleBanckApp\\{customer.AccountNumber}.txt";
         File.Create(filePath).Close();
 
-        using (StreamWriter writer = new StreamWriter(filePath, true))
+        try
         {
-            writer.WriteLine(
-                $"{customer.FirstName}," +
-                $"{customer.LastName}," +
-                $"{customer.Email}," +
-                $"{customer.AccountNumber}," +
-                $"{customer.Pin}," +
-                $"{customer.CurrentAccount.Balance}," +
-                $"{customer.SavingsAccount.Balance}"
-            );
+            using (StreamWriter writer = new StreamWriter(filePath, true))
+            {
+                writer.WriteLine(
+                    $"{customer.FirstName}," +
+                    $"{customer.LastName}," +
+                    $"{customer.Email}," +
+                    $"{customer.AccountNumber}," +
+                    $"{customer.Pin}," +
+                    $"{customer.CurrentAccount.Balance}," +
+                    $"{customer.SavingsAccount.Balance}"
+                );
+            }
+        }
+        catch (IOException ex)
+        {
+            Console.WriteLine($"Error writing customer data to file: {ex.Message}");
         }
     }
     public static string GenerateAccountNumber(string firstName, string lastName)
@@ -203,40 +210,55 @@ public class BankApplication
         string currentFileName =
             $"C:\\Users\\jeffe\\Documents\\.Projetos_C#\\BankApplicationCA2\\ConsoleBanckApp\\{accountNumber.PadLeft(8, '0')}-current.txt";
 
-        // Check if the files already exist
-        if (!File.Exists(savingsFileName))
+        try
         {
-            File.Create(savingsFileName).Dispose();
+            // Check if the files already exist
+            if (!File.Exists(savingsFileName))
+            {
+                File.Create(savingsFileName).Dispose();
+            }
+            if (!File.Exists(currentFileName))
+            {
+                File.Create(currentFileName).Dispose();
+            }
         }
-        if (!File.Exists(currentFileName))
+        catch (IOException ex)
         {
-            File.Create(currentFileName).Dispose();
+            Console.WriteLine($"Error creating account files: {ex.Message}");
+            // Aqui você pode decidir como lidar com a exceção, como registrar em um arquivo de log ou exibir uma mensagem para o usuário.
         }
 
         return (currentFileName, savingsFileName);
     }
     private static void DeleteCustomerAccount()
     {
-        Console.WriteLine("Enter Account Number: ");
-        string accountNumber = Console.ReadLine();
-
-        Customer customer = customers.Find(c => c.AccountNumber == accountNumber);
-
-        if (customer == null)
+        try
         {
-            Console.WriteLine("Customer not found.");
-            return;
-        }
+            Console.WriteLine("Enter Account Number: ");
+            string accountNumber = Console.ReadLine();
 
-        if (customer.CurrentAccount.Balance != 0 || customer.SavingsAccount.Balance != 0)
+            Customer customer = customers.Find(c => c.AccountNumber == accountNumber);
+
+            if (customer == null)
+            {
+                Console.WriteLine("Customer not found.");
+                return;
+            }
+
+            if (customer.CurrentAccount.Balance != 0 || customer.SavingsAccount.Balance != 0)
+            {
+                Console.WriteLine("Customer cannot be deleted. Account balance must be zero.");
+                return;
+            }
+
+            customers.Remove(customer);
+
+            Console.WriteLine("Customer account deleted successfully!");
+        }
+        catch (Exception ex)
         {
-            Console.WriteLine("Customer cannot be deleted. Account balance must be zero.");
-            return;
+            Console.WriteLine($"An error occurred: {ex.Message}");
         }
-
-        customers.Remove(customer);
-
-        Console.WriteLine("Customer account deleted successfully!");
     }
 
     private static void CreateTransaction()

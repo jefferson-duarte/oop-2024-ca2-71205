@@ -26,9 +26,16 @@ public abstract class Account
 
     protected void RecordTransaction(Transaction transaction, string fileName)
     {
-        using (StreamWriter writer = new StreamWriter(fileName, true))
+        try
         {
-            writer.WriteLine($"{transaction.Timestamp}\t{transaction.Action}\t{transaction.Amount}\t{transaction.Balance}");
+            using (StreamWriter writer = new StreamWriter(fileName, true))
+            {
+                writer.WriteLine($"{transaction.Timestamp}\t{transaction.Action}\t{transaction.Amount}\t{transaction.Balance}");
+            }
+        }
+        catch (IOException ex)
+        {
+            Console.WriteLine($"Error writing transaction to file: {ex.Message}");
         }
     }
 }
