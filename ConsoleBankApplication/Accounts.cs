@@ -1,14 +1,14 @@
 ﻿using System;
 using System.IO;
 
-public class Account()
+public abstract class Account
 {
     public decimal Balance { get; set; }
 
     public virtual void Lodge(decimal amount, Customer customer)
     {
         Balance += amount;
-        RecordTransaction("Lodgement", amount);
+        RecordTransaction(new Transaction("Lodgement", amount, Balance), GetFileName(customer));
     }
 
     public virtual void Withdraw(decimal amount, Customer customer)
@@ -19,11 +19,17 @@ public class Account()
         }
 
         Balance -= amount;
-        RecordTransaction("Withdrawal", amount);
+        RecordTransaction(new Transaction("Withdrawal", amount, Balance), GetFileName(customer));
     }
 
-    protected void RecordTransaction(string action, decimal amount)
+    protected abstract string GetFileName(Customer customer);
+
+    protected void RecordTransaction(Transaction transaction, string fileName)
     {
+        using (StreamWriter writer = new StreamWriter(fileName, true))
+        {
+            writer.WriteLine($"{transaction.Timestamp}\t{transaction.Action}\t{transaction.Amount}\t{transaction.Balance}");
+        }
     }
 }
 
@@ -31,44 +37,20 @@ public class CurrentAccount : Account
 {
     public override void Lodge(decimal amount, Customer customer)
     {
-        string fn = customer.FirstName;
-        string ln = customer.LastName;
-
         base.Lodge(amount, customer);
-        string accountNumber = BankApplication.GenerateAccountNumber(fn, ln);
-        string currentFileName = BankApplication.GenerateAccountFiles(accountNumber).currentFileName;
-
-        RecordTransaction(
-            "Lodgement",
-            amount,
-            currentFileName
-        );
     }
 
     public override void Withdraw(decimal amount, Customer customer)
     {
-        string fn = customer.FirstName;
-        string ln = customer.LastName;
-
         base.Withdraw(amount, customer);
-        string accountNumber = BankApplication.GenerateAccountNumber(fn, ln);
-        string currentFileName = BankApplication.GenerateAccountFiles(accountNumber).currentFileName;
-
-        RecordTransaction(
-            "Withdrawal",
-            amount,
-            currentFileName
-        );
     }
 
-    private void RecordTransaction(string action, decimal amount, string fileName)
+    protected override string GetFileName(Customer customer)
     {
-        string transactionRecord = $"{DateTime.Now}\t{action}\t{amount}\t{Balance}";
-
-        using (StreamWriter writer = new StreamWriter(fileName, true))
-        {
-            writer.WriteLine(transactionRecord);
-        }
+        string fn = customer.FirstName;
+        string ln = customer.LastName;
+        string accountNumber = BankApplication.GenerateAccountNumber(fn, ln);
+        return BankApplication.GenerateAccountFiles(accountNumber).currentFileName;
     }
 }
 
@@ -76,43 +58,35 @@ public class SavingsAccount : Account
 {
     public override void Lodge(decimal amount, Customer customer)
     {
-        string fn = customer.FirstName;
-        string ln = customer.LastName;
-
         base.Lodge(amount, customer);
-        string accountNumber = BankApplication.GenerateAccountNumber(fn, ln);
-        string savingsFileName = BankApplication.GenerateAccountFiles(accountNumber).savingsFileName;
-
-        RecordTransaction(
-            "Lodgement",
-            amount,
-            savingsFileName
-        );
     }
 
     public override void Withdraw(decimal amount, Customer customer)
     {
-        string fn = customer.FirstName;
-        string ln = customer.LastName;
-
         base.Withdraw(amount, customer);
-        string accountNumber = BankApplication.GenerateAccountNumber(fn, ln);
-        string savingsFileName = BankApplication.GenerateAccountFiles(accountNumber).savingsFileName;
-
-        RecordTransaction(
-            "Withdrawal",
-            amount,
-            savingsFileName
-        );
     }
 
-    private void RecordTransaction(string action, decimal amount, string fileName)
+    protected override string GetFileName(Customer customer)
     {
-        string transactionRecord = $"{DateTime.Now}\t{action}\t{amount}\t{Balance}";
+        string fn = customer.FirstName;
+        string ln = customer.LastName;
+        string accountNumber = BankApplication.GenerateAccountNumber(fn, ln);
+        return BankApplication.GenerateAccountFiles(accountNumber).savingsFileName;
+    }
+}
 
-        using (StreamWriter writer = new StreamWriter(fileName, true))
-        {
-            writer.WriteLine(transactionRecord);
-        }
+public class Transaction
+{
+    public DateTime Timestamp { get; }
+    public string Action { get; }
+    public decimal Amount { get; }
+    public decimal Balance { get; }
+
+    public Transaction(string action, decimal amount, decimal balance)
+    {
+        Timestamp = DateTime.Now;
+        Action = action;
+        Amount = amount;
+        Balance = balance;
     }
 }
