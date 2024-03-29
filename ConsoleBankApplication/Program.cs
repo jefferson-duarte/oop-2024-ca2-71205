@@ -9,9 +9,13 @@ public class BankApplication
 {
     private static readonly string EmployeePin = "A1234";
     private static List<Customer> customers = new List<Customer>();
+    //private static readonly string customersFilePath = $"C:\\Users\\jeffe\\Documents\\.Projetos_C#\\BankApplicationCA2\\ConsoleBanckApp\\customers.txt";
+    private static readonly string customersFilePath = $"C:\\Users\\jeffe\\Documents\\.Projetos_C#\\Projeto_Particionado\\ConsoleBankApplication\\customers.txt";
 
     public static void Main(string[] args)
     {
+        LoadCustomers();
+
         while (true)
         {
             Console.WriteLine("Welcome to the Bank Application");
@@ -169,7 +173,19 @@ public class BankApplication
     private static void SaveCustomerData(Customer customer)
     {
         string filePath = $"C:\\Users\\jeffe\\Documents\\.Projetos_C#\\BankApplicationCA2\\ConsoleBanckApp\\{customer.AccountNumber}.txt";
-        File.Create(filePath).Close();
+    
+        try
+        {
+            // Check if the files already exist
+            if (!File.Exists(filePath))
+            {
+                File.Create(filePath).Dispose();
+            }            
+        }
+        catch (IOException ex)
+        {
+            Console.WriteLine($"Error creating account files: {ex.Message}");
+        }
 
         try
         {
@@ -189,6 +205,39 @@ public class BankApplication
         catch (IOException ex)
         {
             Console.WriteLine($"Error writing customer data to file: {ex.Message}");
+        }
+    }
+
+    private static void LoadCustomers()
+    {
+        if (File.Exists(customersFilePath))
+        {
+            try
+            {
+                //customers.Clear();
+                using (StreamReader reader = new StreamReader(customersFilePath))
+                {
+                    string line;
+                    while ((line = reader.ReadLine()) != null)
+                    {
+                        string[] parts = line.Split(',');
+                        string firstName = parts[0];
+                        string lastName = parts[1];
+                        string email = parts[2];
+                        string accountNumber = parts[3];
+                        string pin = parts[4];
+                        decimal currentBalance = decimal.Parse(parts[5]);
+                        decimal savingsBalance = decimal.Parse(parts[6]);
+
+                        Customer customer = new Customer(firstName, lastName, email, accountNumber, pin, currentBalance, savingsBalance);
+                        customers.Add(customer);
+                    }
+                }
+            }
+            catch (IOException ex)
+            {
+                Console.WriteLine($"Error loading customer data: {ex.Message}");
+            }
         }
     }
     public static string GenerateAccountNumber(string firstName, string lastName)
@@ -225,7 +274,6 @@ public class BankApplication
         catch (IOException ex)
         {
             Console.WriteLine($"Error creating account files: {ex.Message}");
-            // Aqui você pode decidir como lidar com a exceção, como registrar em um arquivo de log ou exibir uma mensagem para o usuário.
         }
 
         return (currentFileName, savingsFileName);
@@ -363,18 +411,25 @@ public class BankApplication
 
     private static void ListAllCustomersWithBalances()
     {
-        Console.WriteLine("Account Number | First Name | Last Name | Current Account Balance | Savings Account Balance");
-        Console.WriteLine("--------------------------------------------------------------------------------------");
+        Console.WriteLine("---------------------------------------------------------------------------------------------");
+        Console.WriteLine("|Account Number | First Name | Last Name | Current Account Balance | Savings Account Balance|");
+        Console.WriteLine("---------------------------------------------------------------------------------------------");
 
         foreach (Customer customer in customers)
         {
             Console.WriteLine(
-                $"{customer.AccountNumber}\t\t" +
-                $"{customer.FirstName}\t" +
-                $"{customer.LastName}\t\t" +
-                $"{customer.CurrentAccount.Balance}\t\t\t" +
-                $"{customer.SavingsAccount.Balance}");
+                $"|{customer.AccountNumber,-15}| " +
+                $"{customer.FirstName,-11}| " +
+                $"{customer.LastName,-10}| " +
+                $"{CenterAlign(customer.CurrentAccount.Balance.ToString(), 24)}" +
+                $"{CenterAlign(customer.SavingsAccount.Balance.ToString(), 48)}"
+            );
         }
+        Console.WriteLine("---------------------------------------------------------------------------------------------");
+    }
+    private static string CenterAlign(string text, int width)
+    {
+        return string.Format("{0," + ((width + text.Length) / 2).ToString() + "}", text);
     }
 
     private static void ListAllCustomerAccountNumbers()
