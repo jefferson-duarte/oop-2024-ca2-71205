@@ -8,12 +8,16 @@ using static System.Runtime.InteropServices.JavaScript.JSType;
 public class BankApplication
 {
     private static readonly string EmployeePin = "A1234";
+
+    // List to store customer data
     private static List<Customer> customers = new List<Customer>();
-    //private static readonly string customersFilePath = $"C:\\Users\\jeffe\\Documents\\.Projetos_C#\\BankApplicationCA2\\ConsoleBanckApp\\customers.txt";
-    private static readonly string customersFilePath = $"C:\\Users\\jeffe\\Documents\\.Projetos_C#\\Projeto_Particionado\\ConsoleBankApplication\\customers.txt";
+
+    // File path to store customer data
+    private static readonly string customersFilePath = $"C:\\Users\\jeffe\\Documents\\.Projetos_C#\\BankApplicationCA2\\ConsoleBanckApp\\customers.txt";
 
     public static void Main(string[] args)
     {
+        // Load customers data when the program starts
         LoadCustomers();
 
         while (true)
@@ -147,6 +151,7 @@ public class BankApplication
         }
     }
 
+    // Method to create a new customer account
     public static void CreateCustomerAccount()
     {
         Console.WriteLine("Enter First Name: ");
@@ -170,9 +175,10 @@ public class BankApplication
         Console.WriteLine($"PIN: {newCustomer.Pin}");
     }
 
+    // Method to save customers data to a file
     private static void SaveCustomerData(Customer customer)
     {
-        string filePath = $"C:\\Users\\jeffe\\Documents\\.Projetos_C#\\BankApplicationCA2\\ConsoleBanckApp\\{customer.AccountNumber}.txt";
+        string filePath = $"C:\\Users\\jeffe\\Documents\\.Projetos_C#\\BankApplicationCA2\\ConsoleBanckApp\\customers.txt";
     
         try
         {
@@ -189,6 +195,7 @@ public class BankApplication
 
         try
         {
+            // Open a StreamWriter to write customer data to the file
             using (StreamWriter writer = new StreamWriter(filePath, true))
             {
                 writer.WriteLine(
@@ -208,13 +215,14 @@ public class BankApplication
         }
     }
 
+    // Method to load customers data from a file
     private static void LoadCustomers()
     {
         if (File.Exists(customersFilePath))
         {
             try
             {
-                //customers.Clear();
+                // Open a StreamReader to read customer data from the file
                 using (StreamReader reader = new StreamReader(customersFilePath))
                 {
                     string line;
@@ -229,6 +237,7 @@ public class BankApplication
                         decimal currentBalance = decimal.Parse(parts[5]);
                         decimal savingsBalance = decimal.Parse(parts[6]);
 
+                        // Create a new customer object from the data read from the file
                         Customer customer = new Customer(firstName, lastName, email, accountNumber, pin, currentBalance, savingsBalance);
                         customers.Add(customer);
                     }
@@ -242,6 +251,7 @@ public class BankApplication
     }
     public static string GenerateAccountNumber(string firstName, string lastName)
     {
+        // Generating a unique account number based on customer's first and last names
         string initials = $"{firstName.ToUpper()[0]}{lastName.ToUpper()[0]}";
         int fullNameLength = firstName.Length + lastName.Length;
 
@@ -249,6 +259,7 @@ public class BankApplication
         int firstInitialPosition = alphabet.IndexOf(initials[0]) + 1;
         int secondInitialPosition = alphabet.IndexOf(initials[1]) + 1;
 
+        // Format and return the generated account number
         return $"{initials}-{fullNameLength}-{firstInitialPosition}-{secondInitialPosition}";
     }
     public static (string currentFileName, string savingsFileName) GenerateAccountFiles(string accountNumber)
@@ -273,110 +284,151 @@ public class BankApplication
         }
         catch (IOException ex)
         {
+            // Handle IOException if file creation fails
             Console.WriteLine($"Error creating account files: {ex.Message}");
         }
 
+        // Return the generated file names
         return (currentFileName, savingsFileName);
     }
     private static void DeleteCustomerAccount()
     {
         try
         {
+            // Prompt user to enter the account number of the customer to be deleted
             Console.WriteLine("Enter Account Number: ");
             string accountNumber = Console.ReadLine();
 
+            // Find the customer with the given account number
             Customer customer = customers.Find(c => c.AccountNumber == accountNumber);
 
+            // If customer not found, inform the user and return
             if (customer == null)
             {
                 Console.WriteLine("Customer not found.");
                 return;
             }
 
+            // Check if the customer's account balances are zero before deletion
             if (customer.CurrentAccount.Balance != 0 || customer.SavingsAccount.Balance != 0)
             {
                 Console.WriteLine("Customer cannot be deleted. Account balance must be zero.");
                 return;
             }
 
+            // Remove the customer from the list
             customers.Remove(customer);
 
+            // Inform the user that the customer account has been deleted successfully
             Console.WriteLine("Customer account deleted successfully!");
         }
         catch (Exception ex)
         {
+            // Handle any exceptions that occur during the process
             Console.WriteLine($"An error occurred: {ex.Message}");
         }
     }
 
     private static void CreateTransaction()
     {
-        Console.WriteLine("Enter Account Number: ");
-        string accountNumber = Console.ReadLine();
-
-        Customer customer = customers.Find(c => c.AccountNumber == accountNumber);
-
-        if (customer == null)
+        try
         {
-            Console.WriteLine("Customer not found.");
-            return;
+            // Prompt user to enter the account number for the transaction
+            Console.WriteLine("Enter Account Number: ");
+            string accountNumber = Console.ReadLine();
+
+            // Find the customer associated with the entered account number
+            Customer customer = customers.Find(c => c.AccountNumber == accountNumber);
+
+            // If customer not found, inform the user and return
+            if (customer == null)
+            {
+                Console.WriteLine("Customer not found.");
+                return;
+            }
+
+            // Present options for the type of transaction: lodge or withdraw
+            Console.WriteLine("1. Lodge Money");
+            Console.WriteLine("2. Withdraw Money");
+
+            // Get user's choice for the transaction type
+            int choice = GetIntInput("Enter your choice: ");
+
+            switch (choice)
+            {
+                case 1:
+                    // Perform a deposit transaction
+                    DepositMoney(customer);
+                    break;
+                case 2:
+                    // Perform a withdrawal transaction
+                    WithdrawMoney(customer);
+                    break;
+                default:
+                    Console.WriteLine("Invalid choice. Please try again.");
+                    break;
+            }
         }
-
-        Console.WriteLine("1. Lodge Money");
-        Console.WriteLine("2. Withdraw Money");
-
-        int choice = GetIntInput("Enter your choice: ");
-
-        switch (choice)
+        catch (Exception ex)
         {
-            case 1:
-                DepositMoney(customer);
-                break;
-            case 2:
-                WithdrawMoney(customer);
-                break;
-            default:
-                Console.WriteLine("Invalid choice. Please try again.");
-                break;
+            // Handle any exceptions that occur during the process
+            Console.WriteLine($"An error occurred: {ex.Message}");
         }
     }
 
     private static void DepositMoney(Customer customer)
     {
-        Console.WriteLine("1. Current Account");
-        Console.WriteLine("2. Savings Account");
-
-        int choice = GetIntInput("Select Account Type: ");
-
-        Account selectedAccount;
-
-        switch (choice)
+        try
         {
-            case 1:
-                selectedAccount = customer.CurrentAccount;
-                break;
-            case 2:
-                selectedAccount = customer.SavingsAccount;
-                break;
-            default:
-                Console.WriteLine("Invalid choice. Please try again.");
-                return;
+            // Present options for the account type: current or savings
+            Console.WriteLine("1. Current Account");
+            Console.WriteLine("2. Savings Account");
+
+            // Get user's choice for the account type
+            int choice = GetIntInput("Select Account Type: ");
+
+            Account selectedAccount;
+
+            switch (choice)
+            {
+                case 1:
+                    // Deposit into the current account
+                    selectedAccount = customer.CurrentAccount;
+                    break;
+                case 2:
+                    // Deposit into the savings account
+                    selectedAccount = customer.SavingsAccount;
+                    break;
+                default:
+                    Console.WriteLine("Invalid choice. Please try again.");
+                    return;
+            }
+
+            // Prompt user to enter the deposit amount
+            Console.WriteLine("Enter Amount: ");
+            decimal amount = GetDecimalInput("Enter Amount: ");
+
+            // Perform the deposit operation
+            selectedAccount.Lodge(amount, customer);
+
+            // Inform the user about the success of the deposit operation
+            Console.WriteLine($"${amount} deposited successfully!");
+            Console.WriteLine($"{selectedAccount.GetType().Name} Balance: {selectedAccount.Balance}");
         }
-
-        Console.WriteLine("Enter Amount: ");
-        decimal amount = GetDecimalInput("Enter Amount: ");
-
-        selectedAccount.Lodge(amount, customer);
-
-        Console.WriteLine($"${amount} deposited successfully!");
-        Console.WriteLine($"{selectedAccount.GetType().Name} Balance: {selectedAccount.Balance}");
+        catch (Exception ex)
+        {
+            // Handle any exceptions that occur during the process
+            Console.WriteLine($"An error occurred: {ex.Message}");
+        }
     }
 
     public static void WithdrawMoney(Customer customer)
     {
+        // Present options for the account type: current or savings
         Console.WriteLine("1. Current Account");
         Console.WriteLine("2. Savings Account");
 
+        // Get user's choice for the account type
         int choice = GetIntInput("Select Account Type: ");
 
         Account selectedAccount;
@@ -384,9 +436,11 @@ public class BankApplication
         switch (choice)
         {
             case 1:
+                // Withdraw from the current account
                 selectedAccount = customer.CurrentAccount;
                 break;
             case 2:
+                // Withdraw from the savings account
                 selectedAccount = customer.SavingsAccount;
                 break;
             default:
@@ -394,38 +448,55 @@ public class BankApplication
                 return;
         }
 
+        // Prompt user to enter the withdrawal amount
         Console.WriteLine("Enter Amount: ");
         decimal amount = GetDecimalInput("Enter Amount: ");
 
         try
         {
+            // Perform the withdrawal operation
             selectedAccount.Withdraw(amount, customer);
+
+            // Inform the user about the success of the withdrawal operation
             Console.WriteLine($"${amount} withdrawn successfully!");
             Console.WriteLine($"{selectedAccount.GetType().Name} Balance: {selectedAccount.Balance}");
         }
         catch (InsufficientFundsException)
         {
+            // Handle any exceptions that occur during the process
             Console.WriteLine("Insufficient funds. Please try again.");
         }
     }
 
     private static void ListAllCustomersWithBalances()
     {
-        Console.WriteLine("---------------------------------------------------------------------------------------------");
-        Console.WriteLine("|Account Number | First Name | Last Name | Current Account Balance | Savings Account Balance|");
-        Console.WriteLine("---------------------------------------------------------------------------------------------");
-
-        foreach (Customer customer in customers)
+        try
         {
-            Console.WriteLine(
-                $"|{customer.AccountNumber,-15}| " +
-                $"{customer.FirstName,-11}| " +
-                $"{customer.LastName,-10}| " +
-                $"{CenterAlign(customer.CurrentAccount.Balance.ToString(), 24)}" +
-                $"{CenterAlign(customer.SavingsAccount.Balance.ToString(), 48)}"
-            );
+            // Display the header for the customer details table
+            Console.WriteLine("---------------------------------------------------------------------------------------------");
+            Console.WriteLine("|Account Number | First Name | Last Name | Current Account Balance | Savings Account Balance|");
+            Console.WriteLine("---------------------------------------------------------------------------------------------");
+
+            // Iterate through each customer and display their details
+            foreach (Customer customer in customers)
+            {
+                Console.WriteLine(
+                    $"|{customer.AccountNumber,-15}| " +
+                    $"{customer.FirstName,-11}| " +
+                    $"{customer.LastName,-10}| " +
+                    $"{CenterAlign(customer.CurrentAccount.Balance.ToString(), 24)}" +
+                    $"{CenterAlign(customer.SavingsAccount.Balance.ToString(), 48)}"
+                );
+            }
+
+            // Display the footer for the customer details table
+            Console.WriteLine("---------------------------------------------------------------------------------------------");
         }
-        Console.WriteLine("---------------------------------------------------------------------------------------------");
+        catch (Exception ex)
+        {
+            // Handle any exceptions that occur during the process
+            Console.WriteLine($"An error occurred: {ex.Message}");
+        }
     }
     private static string CenterAlign(string text, int width)
     {
@@ -434,11 +505,20 @@ public class BankApplication
 
     private static void ListAllCustomerAccountNumbers()
     {
-        Console.WriteLine("Account Number");
-
-        foreach (Customer customer in customers)
+        try
         {
-            Console.WriteLine(customer.AccountNumber);
+            // Display the account numbers of all customers
+            Console.WriteLine("Account Number");
+
+            foreach (Customer customer in customers)
+            {
+                Console.WriteLine(customer.AccountNumber);
+            }
+        }
+        catch (Exception ex)
+        {
+            // Handle any exceptions that occur during the process
+            Console.WriteLine($"An error occurred: {ex.Message}");
         }
     }
 
@@ -448,13 +528,20 @@ public class BankApplication
         {
             try
             {
+                // Prompt user for input and parse it into an integer
                 Console.Write(prompt);
                 string input = Console.ReadLine();
                 return int.Parse(input);
             }
             catch (FormatException)
             {
+                // Handle invalid input (non-integer)
                 Console.WriteLine("Invalid input. Please enter a valid integer.");
+            }
+            catch (Exception ex)
+            {
+                // Handle any other exceptions that might occur
+                Console.WriteLine($"An error occurred: {ex.Message}");
             }
         }
     }
@@ -465,13 +552,20 @@ public class BankApplication
         {
             try
             {
+                // Prompt user for input and parse it into a decimal
                 Console.Write(prompt);
                 string input = Console.ReadLine();
                 return decimal.Parse(input);
             }
             catch (FormatException)
             {
+                // Handle invalid input (non-decimal)
                 Console.WriteLine("Invalid input. Please enter a valid decimal.");
+            }
+            catch (Exception ex)
+            {
+                // Handle any other exceptions that might occur
+                Console.WriteLine($"An error occurred: {ex.Message}");
             }
         }
     }
