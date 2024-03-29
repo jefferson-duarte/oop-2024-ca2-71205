@@ -1,4 +1,7 @@
-﻿using System;
+﻿// Name: Jefferson Duarte
+// ID: 71205
+
+using System;
 using System.IO;
 
 // Abstract base class representing a generic account

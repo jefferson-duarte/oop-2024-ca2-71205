@@ -1,3 +1,6 @@
+// Name: Jefferson Duarte
+// ID: 71205
+
 using NUnit.Framework;
 using System;
 using System.IO;
@@ -13,11 +16,11 @@ public class BankApplicationTests
         string lastName = "Doe";
         string email = "john.doe@example.com";
 
-        // Simulando entrada do usuário
+        // Simulating user input
         StringReader stringReader = new StringReader($"{firstName}\n{lastName}\n{email}\n");
         Console.SetIn(stringReader);
 
-        // Capturando a saída do console
+        // Capturing console output
         StringWriter stringWriter = new StringWriter();
         Console.SetOut(stringWriter);
 
@@ -28,9 +31,8 @@ public class BankApplicationTests
         // Assert
         string output = stringWriter.ToString();
         Assert.That(output.Contains("Customer account created successfully!"));
-        Assert.That(output.Contains("Account Number:")); // Verifica se o número da conta foi exibido
-        Assert.That(output.Contains("PIN:")); // Verifica se o PIN foi exibido
-        // Aqui você pode adicionar mais asserções conforme necessário
+        Assert.That(output.Contains("Account Number:")); // Verifies if the account number was displayed
+        Assert.That(output.Contains("PIN:")); // Verifies if the PIN was displayed
     }
 
     [Test]
@@ -39,7 +41,7 @@ public class BankApplicationTests
         // Arrange
         string firstName = "John";
         string lastName = "Smith";
-        string expectedAccountNumber = "JS-9-10-19"; // Isso é apenas um exemplo. O valor real pode ser diferente dependendo dos nomes fornecidos.
+        string expectedAccountNumber = "JS-9-10-19"; // This is just an example. The actual value may vary depending on the provided names.
 
         // Act
         string actualAccountNumber = BankApplication.GenerateAccountNumber(firstName, lastName);
@@ -52,8 +54,8 @@ public class BankApplicationTests
     public void GeneratePin_ValidAccountNumber_ReturnsCorrectPin()
     {
         // Arrange
-        string accountNumber = "JS-9-10-19"; // Número de conta de exemplo
-        string expectedPin = "1019"; // O PIN esperado com base nos últimos quatro dígitos do número da conta
+        string accountNumber = "JS-9-10-19"; // Sample account number
+        string expectedPin = "1019"; // The expected PIN based on the last four digits of the account number
 
         // Act
         string actualPin = BankApplication.GeneratePin(accountNumber);

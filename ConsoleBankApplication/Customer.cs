@@ -1,4 +1,7 @@
-﻿using System;
+﻿// Name: Jefferson Duarte
+// ID: 71205
+
+using System;
 
 public class Customer
 {

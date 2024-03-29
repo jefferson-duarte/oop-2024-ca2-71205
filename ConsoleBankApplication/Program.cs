@@ -1,4 +1,7 @@
-﻿using System;
+﻿// Name: Jefferson Duarte
+// ID: 71205
+
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Net.NetworkInformation;
