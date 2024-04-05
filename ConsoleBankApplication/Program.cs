@@ -427,7 +427,6 @@ public class BankApplication
             }
 
             // Prompt user to enter the deposit amount
-            Console.WriteLine("Enter Amount: ");
             decimal amount = GetDecimalInput("Enter Amount: ");
 
             // Perform the deposit operation
@@ -471,7 +470,6 @@ public class BankApplication
         }
 
         // Prompt user to enter the withdrawal amount
-        Console.WriteLine("Enter Amount: ");
         decimal amount = GetDecimalInput("Enter Amount: ");
 
         try
