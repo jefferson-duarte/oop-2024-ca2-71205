@@ -3,8 +3,10 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Net.NetworkInformation;
+using System.Runtime.ExceptionServices;
 using static System.Net.Mime.MediaTypeNames;
 using static System.Runtime.InteropServices.JavaScript.JSType;
 
@@ -16,7 +18,7 @@ public class BankApplication
     private static List<Customer> customers = new List<Customer>();
 
     // File path to store customer data
-    private static readonly string customersFilePath = $"C:\\Users\\jeffe\\Documents\\.Projetos_C#\\BankApplicationCA2\\ConsoleBanckApp\\customers.txt";
+    private static readonly string customersFilePath = $"C:\\Users\\jeffe\\Documents\\.Projetos_C#\\Projeto_Particionado\\ConsoleBankApplication\\customers.txt";
 
     public static void Main(string[] args)
     {
@@ -179,10 +181,18 @@ public class BankApplication
     }
 
     // Method to save customers data to a file
-    private static void SaveCustomerData(Customer customer)
+    public static void SaveCustomerData(Customer customer)
     {
-        string filePath = $"C:\\Users\\jeffe\\Documents\\.Projetos_C#\\BankApplicationCA2\\ConsoleBanckApp\\customers.txt";
-    
+        // Get the current directory where the program is executing
+        string parentDirectory = Directory.GetParent(AppDomain.CurrentDomain.BaseDirectory).FullName.ToString();
+        string path = parentDirectory.Remove(parentDirectory.LastIndexOf("\\")).ToString();
+        string newPath = path.Remove(path.LastIndexOf("\\")).ToString(); ;
+        path = newPath.Remove(newPath.LastIndexOf("\\")).ToString();
+
+        // Combine the current directory with the file name
+        string fileName = "customers.txt";
+        string filePath = Path.Combine(path, fileName);
+
         try
         {
             // Check if the files already exist
@@ -267,22 +277,31 @@ public class BankApplication
     }
     public static (string currentFileName, string savingsFileName) GenerateAccountFiles(string accountNumber)
     {
-        // Generate file names with leading zeros for account number
-        string savingsFileName =
-            $"C:\\Users\\jeffe\\Documents\\.Projetos_C#\\BankApplicationCA2\\ConsoleBanckApp\\{accountNumber.PadLeft(8, '0')}-savings.txt";
-        string currentFileName =
-            $"C:\\Users\\jeffe\\Documents\\.Projetos_C#\\BankApplicationCA2\\ConsoleBanckApp\\{accountNumber.PadLeft(8, '0')}-current.txt";
+
+        //Get the current directory where the program is executing
+        string parentDirectory = Directory.GetParent(AppDomain.CurrentDomain.BaseDirectory).FullName.ToString();
+        string path = parentDirectory.Remove(parentDirectory.LastIndexOf("\\")).ToString();
+        string newPath = path.Remove(path.LastIndexOf("\\")).ToString(); ;
+        path = newPath.Remove(newPath.LastIndexOf("\\")).ToString();
+
+
+        //Combine the current directory with the file name
+        string savingsFileName = $"{accountNumber.PadLeft(8, '0')}-savings.txt";
+        string savingsFilePath = Path.Combine(path, savingsFileName);
+
+        string currentFileName = $"{accountNumber.PadLeft(8, '0')}-current.txt";
+        string currentFilePath = Path.Combine(path, currentFileName);
 
         try
         {
             // Check if the files already exist
-            if (!File.Exists(savingsFileName))
+            if (!File.Exists(savingsFilePath))
             {
-                File.Create(savingsFileName).Dispose();
+                File.Create(savingsFilePath).Dispose();
             }
-            if (!File.Exists(currentFileName))
+            if (!File.Exists(currentFilePath))
             {
-                File.Create(currentFileName).Dispose();
+                File.Create(currentFilePath).Dispose();
             }
         }
         catch (IOException ex)
@@ -292,7 +311,7 @@ public class BankApplication
         }
 
         // Return the generated file names
-        return (currentFileName, savingsFileName);
+        return (currentFilePath, savingsFilePath);
     }
     private static void DeleteCustomerAccount()
     {
